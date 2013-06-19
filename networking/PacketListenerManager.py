@@ -440,13 +440,17 @@ def handle2B(FileObject):
 def handle33(FileObject):
     X = DataUtil.readInt(FileObject)
     Z = DataUtil.readInt(FileObject)
-    GroundUpContinous = DataUtil.readBoolean(FileObject)
+    GroundUpContinuous = DataUtil.readBoolean(FileObject)
     PrimaryBitMap = DataUtil.readShort(FileObject)
     AddBitMap = DataUtil.readShort(FileObject)
     CompressedSize = DataUtil.readInt(FileObject)
-    FileObject.read(CompressedSize) #not going to be inflating and using this data until I know how to :3
+    RawData = FileObject.read(CompressedSize)
     return {'x': X,
-            'z': Z
+            'z': Z,
+            'GroundUpContinuous': GroundUpContinuous,
+            'PrimaryBitMap': PrimaryBitMap,
+            'AddBitMap': AddBitMap,
+            'RawData': RawData
     }
 
 
@@ -521,14 +525,25 @@ def handle38(FileObject):
 
     #int - chunk data length
     ChunkDataLength = DataUtil.readInt(FileObject)
-    DataUtil.readBoolean(FileObject)
-    FileObject.read(ChunkDataLength) #just gonna ignore this for now
+    SkyLightSent = DataUtil.readBoolean(FileObject)
+    RawData = FileObject.read(ChunkDataLength)
 
-    #metadata - ignoring this
+    metadata = []
     for i in range(ChunkCount):
-        FileObject.read(12)
+        ChunkX = DataUtil.readInt(FileObject)
+        ChunkZ = DataUtil.readInt(FileObject)
+        PrimaryBitMap = DataUtil.readUnsignedShort(FileObject)
+        AddBitMap = DataUtil.readUnsignedShort(FileObject)
+        metadata.append({'x': ChunkX,
+                         'z': ChunkZ,
+                         'PrimaryBitMap': PrimaryBitMap,
+                         'AddBitMap': AddBitMap
+                         })
 
-    return {'ChunkCount': ChunkCount
+    return {'ChunkCount': ChunkCount,
+            'SkyLightSent': SkyLightSent,
+            'RawData': RawData,
+            'ChunkMeta': metadata
     }
 
 
@@ -800,6 +815,11 @@ def handleCF(FileObject):
     remove = DataUtil.readBoolean(FileObject)
     score_name = DataUtil.readString(FileObject)
     value = DataUtil.readInt(FileObject)
+    return {'Item Name' : name,
+            'Remove' : remove,
+            'Score Name' : score_name,
+            'Value' : value
+    }
     
 def handleD0(FileObject):
     position = DataUtil.readByte(FileObject)
@@ -816,6 +836,7 @@ def handleD1(FileObject):
         toReturn['Display Name'] = DataUtil.readString(FileObject)
         toReturn['Prefix'] = DataUtil.readString(FileObject)
         toReturn['Suffix'] = DataUtil.readString(FileObject)
+        toReturn['FriendlyFire'] = DataUtil.readByte(FileObject)
     if mode == 0 or mode == 3 or mode == 4:
         count = DataUtil.readShort(FileObject)
         players = []
